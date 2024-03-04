@@ -1,8 +1,6 @@
-# File: code_generator.py
+from typing import List, Union
 
-from typing import List
-
-from code_builder import CodeBuilder
+from CodeBuilder import CodeBuilder, CodeTemplate
 
 def generate_function(name: str, arguments: str, body: Union[str, CodeBuilder]) -> str:
     """
@@ -19,12 +17,16 @@ def generate_function(name: str, arguments: str, body: Union[str, CodeBuilder]) 
     """
     builder = CodeBuilder()
     builder.add_line(f"def {name}({arguments}):")
-    builder.indent()
     if isinstance(body, str):
+        builder.indent()
         builder.add_line(body)
+        builder.dedent()
+    elif isinstance(body, CodeBuilder):
+        builder.indent()
+        builder.add_code(body)
+        builder.dedent()
     else:
-        builder.code_lines.extend(body.code_lines)
-    builder.dedent()
+        raise TypeError("Body for function should be string or CodeBuilder")
     return builder.get_code()
 
 def generate_class(name: str, attributes: List[str], methods: List[CodeBuilder]) -> str:
@@ -43,9 +45,9 @@ def generate_class(name: str, attributes: List[str], methods: List[CodeBuilder])
     builder.add_line(f"class {name}:")
     builder.indent()
     for attribute in attributes:
-        builder.add_line(f"  {attribute}")
+        builder.add_line(f"    {attribute}")
     for method in methods:
-        builder.add_code(method)  # Reuse generate_code for methods (CodeBuilder instances)
+        builder.add_code(method)
     builder.dedent()
     return builder.get_code()
-  
+    
